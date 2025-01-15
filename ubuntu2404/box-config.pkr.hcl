@@ -4,7 +4,11 @@ packer {
     hyperv = {
       version = ">= 1.1.1"
       source  = "github.com/hashicorp/hyperv"
-    }
+    } 
+    vagrant = {
+      version = ">= 1.1.0"
+      source  = "github.com/hashicorp/vagrant"
+    }       
   }
 }
 
