@@ -142,6 +142,7 @@ build {
       output = "builds/${var.name}.box"
       vagrantfile_template = "templates/vagrantfile.rb"
       include = ["templates/info.json"]
+      architecture = "amd64"
     }
     post-processor "checksum" {
       checksum_types = ["sha256"]
