@@ -19,12 +19,12 @@ variable "name" {
 
 variable "iso_urls" {
   type    = list(string)
-  default = ["iso/ubuntu-24.04.2-live-server-amd64.iso", "https://releases.ubuntu.com/24.04/ubuntu-24.04.2-live-server-amd64.iso"]
+  default = ["iso/ubuntu-24.04.3-live-server-amd64.iso", "https://releases.ubuntu.com/24.04/ubuntu-24.04.3-live-server-amd64.iso"]
 }
 
 variable "iso_checksum" {
   type    = string
-  default = "d6dab0c3a657988501b4bd76f1297c053df710e06e0c3aece60dead24f270b4d"
+  default = "c3514bf0056180d09376462a7a1b4f213c1d6e8ea67fae5c25099c6fd3d8274b"
 }
 
 # Variable cant be dynamic, using local instead
