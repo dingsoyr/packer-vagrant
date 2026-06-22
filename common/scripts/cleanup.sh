@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Clean up
 echo "==> Removing unneeded packages"
 apt-get -y autoremove --purge
 
