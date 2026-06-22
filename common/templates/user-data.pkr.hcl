@@ -40,3 +40,5 @@ autoinstall:
 
   late-commands:
     - curtin in-target -- update-grub
+    - curtin in-target -- apt-get update
+    - curtin in-target -- apt-get upgrade -y
