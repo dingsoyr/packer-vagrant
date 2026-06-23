@@ -16,6 +16,7 @@ source "hyperv-iso" "efi" {
   ssh_port              = 22
   ssh_timeout           = "3600s"
   enable_dynamic_memory = false
+  enable_secure_boot    = false
   guest_additions_mode  = "disable"
   switch_name           = "${var.switch_name}"
   generation            = "2"
@@ -24,10 +25,9 @@ source "hyperv-iso" "efi" {
   shutdown_command      = "echo '${var.password}' | sudo -S shutdown -P now"
   http_content = {
     "/user-data" = templatefile("./common/templates/user-data.pkr.hcl", {
-      username          = var.username
-      password          = var.crypted_password
-      hostname          = var.name
-      network_interface = var.network_interface
+      username = var.username
+      password = var.crypted_password
+      hostname = var.name
     })
     "/meta-data" = ""
   }

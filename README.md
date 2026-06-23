@@ -27,6 +27,16 @@ To be able to push the box to Vagrant Cloud a "service principal" user have to b
 - `boxes/*.pkrvars.hcl` selects which Ubuntu version to build
 - `common/scripts` and `common/templates` contain shared provisioning and box assets
 
+## Hyper-V design choices
+This repository intentionally builds an Ubuntu Vagrant box for Hyper-V, not a generic multi-provider box.
+
+- Generation 2 is used with dynamic memory disabled and secure boot explicitly turned off for more predictable Ubuntu boots on Hyper-V.
+- The guest network is standardized around `eth0`. The build config and guest boot settings are aligned to keep interface naming predictable.
+- The guest installs the `linux-azure` kernel track to better match Hyper-V as the target platform.
+- The packaged box resets its machine identity before packaging so cloned VMs generate a fresh identity on first boot.
+- The included Vagrantfile keeps runtime CPU and memory lower than the build settings on purpose.
+- `/vagrant` is disabled by default because shared folder behavior with Hyper-V is not as reliable as on some other Vagrant providers.
+
 ## Build box
 Run all commands from the repository root.
 
@@ -57,7 +67,7 @@ packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --var "hcp_client_id=CLIE
 Optional overrides for the build workflow:
 
 ```
-packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --var "switch_name=Default switch" --var "network_interface=eth0" --var "hyperv_configuration_version=11.0" --force -only="build.hyperv-iso.efi" .
+packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --var "switch_name=Default switch" --var "hyperv_configuration_version=11.0" --force -only="build.hyperv-iso.efi" .
 ```
 
 Available box definitions:

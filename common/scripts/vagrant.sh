@@ -13,3 +13,8 @@ mkdir -pm 700 $SSH_USER_HOME/.ssh
 printf '%s\n' "$VAGRANT_INSECURE_PUBLIC_KEY" > ${SSH_USER_HOME}/.ssh/authorized_keys
 chmod 0600 ${SSH_USER_HOME}//.ssh/authorized_keys
 chown -R ${SSH_USER}:${SSH_USER} ${SSH_USER_HOME}//.ssh
+
+echo "==> Resetting machine identity"
+truncate -s 0 /etc/machine-id
+rm -f /var/lib/dbus/machine-id
+ln -s /etc/machine-id /var/lib/dbus/machine-id

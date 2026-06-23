@@ -67,11 +67,6 @@ variable "switch_name" {
   default = "Default switch"
 }
 
-variable "network_interface" {
-  type    = string
-  default = "eth0"
-}
-
 variable "hyperv_configuration_version" {
   type    = string
   default = "11.0"

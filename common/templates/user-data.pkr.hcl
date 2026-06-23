@@ -3,8 +3,8 @@ autoinstall:
   version: 1
   locale: en_US.UTF-8
   keyboard:
-    layout: "no"
-  timezone: "Europe/Oslo"
+    layout: "us"
+  timezone: "Etc/UTC"
 
   early-commands:
     - systemctl stop ssh.socket
@@ -18,7 +18,7 @@ autoinstall:
     network:
       version: 2
       ethernets:
-        ${network_interface}:
+        eth0:
           dhcp4: true
 
   identity:
@@ -31,9 +31,9 @@ autoinstall:
       name: lvm
 
   packages:
-    - linux-virtual
-    - linux-cloud-tools-virtual
-    - linux-tools-virtual
+    - linux-azure
+    - linux-cloud-tools-azure
+    - linux-tools-azure
 
   package_update: true
   package_upgrade: true
