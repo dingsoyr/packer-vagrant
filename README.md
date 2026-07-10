@@ -18,7 +18,7 @@ New-NetFirewallRule -DisplayName "Packer_http_server" -Direction Inbound -Action
 ```
 
 ## Vagrant Cloud
-To be able to push the box to Vagrant Cloud a "service principal" user have to be added to the Vagrant Cloud account. This service principal will give a "client_id" og "client_secret" that can be used when pushing to Vagrant Cloud.
+To be able to push the box to Vagrant Cloud a "service principal" user have to be added to the Vagrant Cloud account. This service principal will give a `hcp_client_id` og `hcp_client_secret` that can be used when pushing to Vagrant Cloud. The Vagrant Cloud owner or namespace is configured with `vagrant_cloud_user`.
 
 ## Repository layout
 - `variables.pkr.hcl` contains common variables and plugin definitions
@@ -39,6 +39,57 @@ This repository intentionally builds an Ubuntu Vagrant box for Hyper-V, not a ge
 
 ## Build box
 Run all commands from the repository root.
+
+You can either run the Packer commands manually or use the included PowerShell helper script.
+
+To use the helper script for optional publish, create a local `.env` file first:
+
+```
+Copy-Item .env.example .env
+```
+
+Then edit `.env` and add your Vagrant Cloud credentials:
+
+```
+hcp_client_id=your-vagrant-cloud-client-id
+hcp_client_secret=your-vagrant-cloud-client-secret
+vagrant_cloud_user=your-vagrant-cloud-user
+```
+
+The `.env` file is ignored by git and is only needed if you choose to publish.
+
+Run the helper script:
+
+```
+.\build.ps1
+```
+
+You can also skip the interactive prompts by providing parameters:
+
+```
+.\build.ps1 -Box ubuntu2404 -DeleteCache $true -Publish $true
+```
+
+To run only the prerequisite checks without starting a build:
+
+```
+.\build.ps1 -PreflightOnly
+```
+
+The script will:
+- run preflight checks for Packer, Vagrant, Hyper-V, and the `Packer_http_server` firewall rule
+- let you choose which box definition to build
+- ask whether `packer_cache` should be deleted first to force fresh downloads
+- run `packer validate` for the selected box before build
+- run the build
+- ask whether the completed box should be published to Vagrant Cloud
+- print the direct HashiCorp Vagrant Cloud URL after a successful publish
+
+Supported script parameters:
+- `-Box ubuntu2404` selects a box definition by name or file name without prompting
+- `-DeleteCache $true` or `-DeleteCache $false` answers the cache question without prompting
+- `-Publish $true` or `-Publish $false` answers the publish question without prompting
+- `-PreflightOnly` runs only the prerequisite checks and exits
 
 To initialize packer and download all plugins run:
 
@@ -61,8 +112,10 @@ packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --force -only="build.hype
 Publish an already-built box to Vagrant Cloud:
 
 ```
-packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --var "hcp_client_id=CLIENT_ID" --var "hcp_client_secret=CLIENT_SECRET" --force -only="publish.null.core" .
+packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --var "hcp_client_id=your-vagrant-cloud-client-id" --var "hcp_client_secret=your-vagrant-cloud-client-secret" --var "vagrant_cloud_user=your-vagrant-cloud-user" --force -only="publish.null.core" .
 ```
+
+The publish workflow generates a timestamp-based Vagrant Cloud version with second-level precision so repeated publishes do not reuse the same version within the same hour.
 
 Optional overrides for the build workflow:
 

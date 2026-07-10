@@ -1,5 +1,5 @@
 locals {
-  version = formatdate("YYYY.MM.DD.hh", timestamp())
+  version = formatdate("YYYY.MM.DD.hhmmss", timestamp())
 }
 
 source "null" "core" {
@@ -18,7 +18,7 @@ build {
     post-processor "vagrant-registry" {
       client_id     = "${var.hcp_client_id}"
       client_secret = "${var.hcp_client_secret}"
-      box_tag       = "sture/${var.name}"
+      box_tag       = "${var.vagrant_cloud_user}/${var.name}"
       version       = "${local.version}"
       architecture  = "amd64"
       box_checksum  = fileexists("builds/${var.name}_sha256.checksum") ? "SHA256:${split("\t", file("builds/${var.name}_sha256.checksum"))[0]}" : ""

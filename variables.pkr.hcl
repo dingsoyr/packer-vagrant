@@ -46,6 +46,11 @@ variable "hcp_client_secret" {
   default = "${env("hcp_client_secret") != "" ? env("hcp_client_secret") : "unset"}"
 }
 
+variable "vagrant_cloud_user" {
+  type    = string
+  default = "${env("vagrant_cloud_user") != "" ? env("vagrant_cloud_user") : "unset"}"
+}
+
 variable "username" {
   type    = string
   default = "vagrant"
