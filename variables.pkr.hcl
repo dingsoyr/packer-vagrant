@@ -51,6 +51,11 @@ variable "vagrant_cloud_user" {
   default = "${env("vagrant_cloud_user") != "" ? env("vagrant_cloud_user") : "unset"}"
 }
 
+variable "vagrant_cloud_version" {
+  type    = string
+  default = "unset"
+}
+
 variable "username" {
   type    = string
   default = "vagrant"

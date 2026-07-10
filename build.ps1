@@ -3,7 +3,9 @@ param(
     [string]$Box,
     [Nullable[bool]]$DeleteCache = $null,
     [Nullable[bool]]$Publish = $null,
-    [switch]$PreflightOnly
+    [switch]$PreflightOnly,
+    [switch]$ValidateOnly,
+    [switch]$NonInteractive
 )
 
 $ErrorActionPreference = 'Stop'
@@ -67,6 +69,32 @@ function Invoke-PreflightChecks {
     Write-Host 'Preflight checks passed.'
 }
 
+function Assert-ValidModeSelection {
+    if ($PreflightOnly -and $ValidateOnly) {
+        throw 'PreflightOnly and ValidateOnly cannot be used together.'
+    }
+
+    if ($ValidateOnly -and ($script:PSBoundParameters.ContainsKey('DeleteCache') -or $script:PSBoundParameters.ContainsKey('Publish'))) {
+        throw 'DeleteCache and Publish cannot be used with ValidateOnly.'
+    }
+
+    if ($NonInteractive) {
+        if (-not $PreflightOnly -and -not $script:PSBoundParameters.ContainsKey('Box')) {
+            throw 'NonInteractive mode requires the Box parameter unless PreflightOnly is used.'
+        }
+
+        if (-not $PreflightOnly -and -not $ValidateOnly) {
+            if (-not $script:PSBoundParameters.ContainsKey('DeleteCache')) {
+                throw 'NonInteractive mode requires the DeleteCache parameter.'
+            }
+
+            if (-not $script:PSBoundParameters.ContainsKey('Publish')) {
+                throw 'NonInteractive mode requires the Publish parameter.'
+            }
+        }
+    }
+}
+
 function Select-BoxFile {
     param(
         [Parameter(Mandatory = $true)]
@@ -109,6 +137,9 @@ function Resolve-BoxFile {
 
     $matchingFiles = @(
         $Files | Where-Object {
+            $shortName = $_.Name -replace '\.pkrvars\.hcl$', ''
+
+            $shortName -ieq $normalizedSelection -or
             $_.BaseName -ieq $normalizedSelection -or
             $_.Name -ieq $normalizedSelection
         }
@@ -144,6 +175,10 @@ function Read-YesNo {
 
         Write-Warning 'Please answer y or n.'
     }
+}
+
+function New-VagrantCloudVersion {
+    return (Get-Date).ToUniversalTime().ToString('yyyy.MM.dd.HHmmss')
 }
 
 function Import-DotEnv {
@@ -240,6 +275,7 @@ if (-not $boxFiles) {
     throw 'No box definitions were found in the boxes directory.'
 }
 
+Assert-ValidModeSelection
 Invoke-PreflightChecks
 
 if ($PreflightOnly) {
@@ -258,8 +294,20 @@ else {
 $selectedBoxPath = Join-Path -Path '.\boxes' -ChildPath $selectedBox.Name
 $selectedBoxName = Get-BoxNameFromVarFile -Path $selectedBox.FullName
 
+if ($ValidateOnly) {
+    Invoke-Packer -Arguments @('init', '.')
+    Invoke-Packer -Arguments @('validate', '--var-file', $selectedBoxPath, '.')
+
+    Write-Host ''
+    Write-Host 'Validate-only mode completed successfully.'
+    return
+}
+
 if ($null -ne $DeleteCache) {
     $shouldDeleteCache = $DeleteCache
+}
+elseif ($NonInteractive) {
+    throw 'NonInteractive mode requires the DeleteCache parameter.'
 }
 else {
     $shouldDeleteCache = Read-YesNo -Prompt 'Delete packer_cache before build to force fresh downloads?'
@@ -286,12 +334,16 @@ Invoke-Packer -Arguments @('build', '--var-file', $selectedBoxPath, '--force', '
 if ($null -ne $Publish) {
     $shouldPublish = $Publish
 }
+elseif ($NonInteractive) {
+    throw 'NonInteractive mode requires the Publish parameter.'
+}
 else {
     $shouldPublish = Read-YesNo -Prompt 'Publish the built box to Vagrant Cloud?'
 }
 
 if ($shouldPublish) {
     $envValues = Import-DotEnv -Path (Join-Path -Path $PSScriptRoot -ChildPath '.env')
+    $vagrantCloudVersion = New-VagrantCloudVersion
 
     Invoke-Packer -Arguments @(
         'build'
@@ -303,6 +355,8 @@ if ($shouldPublish) {
         ('hcp_client_secret={0}' -f $envValues['hcp_client_secret'])
         '--var'
         ('vagrant_cloud_user={0}' -f $envValues['vagrant_cloud_user'])
+        '--var'
+        ('vagrant_cloud_version={0}' -f $vagrantCloudVersion)
         '--force'
         '-only=publish.null.core'
         '.'
@@ -310,6 +364,7 @@ if ($shouldPublish) {
 
     $publishedBoxUrl = 'https://portal.cloud.hashicorp.com/vagrant/discover/{0}/{1}' -f $envValues['vagrant_cloud_user'], $selectedBoxName
     Write-Host ''
+    Write-Host ('Published version: {0}' -f $vagrantCloudVersion)
     Write-Host 'Published box:'
     Write-Host $publishedBoxUrl
 }

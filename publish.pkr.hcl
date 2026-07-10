@@ -1,5 +1,5 @@
 locals {
-  version = formatdate("YYYY.MM.DD.hhmmss", timestamp())
+  version = var.vagrant_cloud_version != "unset" ? var.vagrant_cloud_version : formatdate("YYYY.MM.DD.hhmmss", timestamp())
 }
 
 source "null" "core" {

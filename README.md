@@ -70,10 +70,28 @@ You can also skip the interactive prompts by providing parameters:
 .\build.ps1 -Box ubuntu2404 -DeleteCache $true -Publish $true
 ```
 
+To force fully non-interactive execution, add `-NonInteractive`:
+
+```
+.\build.ps1 -NonInteractive -Box ubuntu2404 -DeleteCache $false -Publish $true
+```
+
 To run only the prerequisite checks without starting a build:
 
 ```
 .\build.ps1 -PreflightOnly
+```
+
+To run preflight plus `packer init` and `packer validate` without building:
+
+```
+.\build.ps1 -ValidateOnly
+```
+
+Or non-interactively for a specific box:
+
+```
+.\build.ps1 -NonInteractive -ValidateOnly -Box ubuntu2404
 ```
 
 The script will:
@@ -83,12 +101,14 @@ The script will:
 - run `packer validate` for the selected box before build
 - run the build
 - ask whether the completed box should be published to Vagrant Cloud
-- print the direct HashiCorp Vagrant Cloud URL after a successful publish
+- print the published Vagrant Cloud version and direct HashiCorp URL after a successful publish
 
 Supported script parameters:
 - `-Box ubuntu2404` selects a box definition by name or file name without prompting
 - `-DeleteCache $true` or `-DeleteCache $false` answers the cache question without prompting
 - `-Publish $true` or `-Publish $false` answers the publish question without prompting
+- `-ValidateOnly` runs preflight, `packer init`, and `packer validate`, then exits
+- `-NonInteractive` disables prompts and requires the necessary parameters for the selected mode
 - `-PreflightOnly` runs only the prerequisite checks and exits
 
 To initialize packer and download all plugins run:
@@ -115,7 +135,13 @@ Publish an already-built box to Vagrant Cloud:
 packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --var "hcp_client_id=your-vagrant-cloud-client-id" --var "hcp_client_secret=your-vagrant-cloud-client-secret" --var "vagrant_cloud_user=your-vagrant-cloud-user" --force -only="publish.null.core" .
 ```
 
-The publish workflow generates a timestamp-based Vagrant Cloud version with second-level precision so repeated publishes do not reuse the same version within the same hour.
+The publish workflow uses `vagrant_cloud_version`. If you do not provide one, Packer falls back to a timestamp-based version with second-level precision so repeated publishes do not reuse the same version.
+
+You can also set the version manually when publishing directly:
+
+```
+packer build --var-file .\boxes\ubuntu2404.pkrvars.hcl --var "hcp_client_id=your-vagrant-cloud-client-id" --var "hcp_client_secret=your-vagrant-cloud-client-secret" --var "vagrant_cloud_user=your-vagrant-cloud-user" --var "vagrant_cloud_version=2026.07.10.153045" --force -only="publish.null.core" .
+```
 
 Optional overrides for the build workflow:
 
