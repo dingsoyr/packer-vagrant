@@ -18,6 +18,12 @@ It is intentionally focused on Hyper-V, not a generic multi-provider workflow.
 - `vagrant_cloud_version` may be passed explicitly; otherwise publish falls back to a timestamp-based version.
 - Do not log secrets in clear text.
 
+## Secrets Handling
+- `.env` is expected to exist locally for testing and publish workflows.
+- Do not open, read, print, quote, summarize, or echo secret values from `.env` unless it is strictly necessary and the user has explicitly asked for that exact action.
+- When validating local configuration, prefer checking that required keys exist rather than inspecting or revealing their values.
+- Never include secrets in logs, diffs, examples, or proposed commands.
+
 ## Workflow Expectations
 - Keep manual `packer` commands working; do not make `build.ps1` the only supported workflow.
 - Keep `README.md` in sync when script parameters, workflow, or Packer variables change.
